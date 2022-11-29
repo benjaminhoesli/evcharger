@@ -1,12 +1,11 @@
-import logo from './logo.svg';
 import './App.css';
 
-import './Pages/Travel.js';
-import './Pages/Journey.js';
-import './Pages/Profile.js';
-import './Pages/SignIn.js';
-import './Pages/SignUp.js';
-import 'bootstrap/dist/css/bootstrap.min.css'
+import Travel from './Pages/Travel.js';
+import Journey from './Pages/Journey.js';
+import Profile from './Pages/Profile.js';
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
 
 import {Navbar, Nav, Container} from 'react-bootstrap';
@@ -15,19 +14,33 @@ import {Navbar, Nav, Container} from 'react-bootstrap';
 
 function App() {
   return (
-    <>
+    <Router>
+      <div>
       <Navbar bg="dark" variant="dark">
         <Container>
-          <Navbar.Brand href="#home">Navbar</Navbar.Brand>
-          <Nav className="me-auto">
-            <Nav.Link href="#home">Home</Nav.Link>
-            <Nav.Link href="#features">Features</Nav.Link>
-            <Nav.Link href="#pricing">Pricing</Nav.Link>
+          <Navbar.Brand>EV Charger</Navbar.Brand>
+          <Nav>
+            <Nav.Link as={Link} to={"/Journey"}>Journey</Nav.Link>
+            <Nav.Link as={Link} to={"/Profile"}>Profile</Nav.Link>
+            <Nav.Link as={Link} to={"/Travel"}>Travel</Nav.Link>
           </Nav>
         </Container>
       </Navbar>
+      </div>
 
-    </>
+
+      <div>
+      <Routes>
+        <Route exact path='/Travel' element={<Travel/>}>
+        </Route>
+        <Route exact path='/Profile' element={<Profile/>}>
+        </Route>
+        <Route exact path='/Journey' element={<Journey/>}>
+        </Route>
+        </Routes>
+      </div>
+
+    </Router>
 
 
 

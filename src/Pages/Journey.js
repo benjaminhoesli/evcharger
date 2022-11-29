@@ -1,11 +1,5 @@
-import './Journey.css';
+import React from 'react'
 
-const Journey = () => {
-    return (
-      <div className="App">
-        <h2>Journey Page</h2>
-      </div>  
-    )
+export default function Journey() {
+    return <h1>Journey</h1>
 }
-
-export default Journey;

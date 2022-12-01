@@ -1,6 +1,11 @@
 .App {
+
+  background-color: #174c81;
+  color: white;
+}
+.Heading {
   text-align: center;
-  background-color: #343a40;
+  background-color: #174c81;
   color: white;
 }
 

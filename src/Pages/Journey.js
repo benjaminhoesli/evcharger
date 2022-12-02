@@ -1,6 +1,7 @@
 import React from 'react';
-import { Grid,TextField } from '@material-ui/core';
+import { Grid,TextField, InputLabel } from '@material-ui/core';
 import { Button} from 'react-bootstrap';
+import Select from 'react-select'
 
 export default function Journey() {
     return (
@@ -10,22 +11,25 @@ export default function Journey() {
             marginTop:'0px',
             fontSize:'50px',
             backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
           }}>
     
     <form>
         <Grid>
             <Grid container>
-                <Grid item xs={6}><TextField id="origin" label="Origin" variant="outlined" /></Grid>
-                <Grid item xs={6}><TextField id="car_model" label="Car Model" variant="outlined" /></Grid>
-                <Grid item xs={6}><TextField id="destination" label="Destination" variant="outlined" /></Grid>
-                <Grid item xs={6}><TextField id="charge" label="Charge" variant="outlined" /></Grid>
+                <Grid item xs={6}><TextField id="origin" label="Origin" variant="filled" /></Grid>
+                <Grid item xs={6}><InputLabel id="carmodel" label="Car Model" /><Select> </Select></Grid>
+                <Grid item xs={6}><TextField id="destination" label="Destination" variant="filled" /></Grid>
+                <Grid item xs={6}><TextField id="charge" label="Remaining Charge" variant="filled" /></Grid>
                 <Button color="blue" appearance="primary">
                 Search Route</Button>                     
             </Grid>
         </Grid>
+
         </form>
+
+
         </div>
+        
         );
         
 }

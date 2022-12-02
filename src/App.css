@@ -1,11 +1,13 @@
 .App {
 
-  background-color: #174c81;
+  height: '100vh';
   color: white;
+  background-color: 'gray';
+
 }
 .Heading {
   text-align: center;
-  background-color: #174c81;
+  background-color: 'gray';
   color: white;
 }
 

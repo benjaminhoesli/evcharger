@@ -1,11 +1,11 @@
 import React from 'react'
 import { TextField} from '@fluentui/react/lib/TextField';
 import { Stack} from '@fluentui/react/lib/Stack';
-import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';
+import { DefaultButton} from '@fluentui/react/lib/Button';
 
 const stackTokens = { childrenGap: 100 };
 const stackStyles = { root: { width: 650,
-    color: '#FFFFFF'   
+  color: '#FFFFFF'   
 } };
 const columnProps = {
     tokens: { childrenGap: 15 },
@@ -14,14 +14,20 @@ const columnProps = {
 
 export default function Profile() {
     return (
-    <div className='App'>
+      <div style={{ 
+        background: 'gray',
+        height:'100vh',
+        marginTop:'0px',
+        fontSize:'50px',
+        backgroundSize: 'cover',
+      }}>
     
     <h1 className="Heading">Profile</h1>
     <h2>User Information</h2>
     <hr size="3"></hr>
     <Stack horizontal tokens={stackTokens} styles={stackStyles}>
       <Stack {...columnProps }>
-        <TextField label="First Name" />
+        <TextField label="First Name" variant="outlined"/>
         <TextField label="State" />
         <TextField label="Street" />
         <TextField label="Car 1 " />

@@ -23,8 +23,10 @@ export default function Profile() {
       }}>
     
     <h1 className="Heading">Profile</h1>
+    <hr></hr>
     <h2>User Information</h2>
-    <hr size="3"></hr>
+    
+    <hr></hr>
     <Stack horizontal tokens={stackTokens} styles={stackStyles}>
       <Stack {...columnProps }>
         <TextField label="First Name" variant="outlined"/>

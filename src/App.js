@@ -1,50 +1,28 @@
-import './App.css';
-
-import Travel from './Pages/Travel.js';
-import Journey from './Pages/Journey.js';
-import Profile from './Pages/Profile.js';
-
+import React from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import NavbarHeader from './Navbar';
 
-
-import {Navbar, Nav, Container} from 'react-bootstrap';
-
-
+const stackTokens = { childrenGap: 100 };
+const stackStyles = { root: { width: 650,
+  color: '#FFFFFF'   
+} };
+const columnProps = {
+    tokens: { childrenGap: 15 },
+    styles: { root: { width: 300 } },
+};
 
 function App() {
-  return (
-    <Router>
-      <div>
-      <Navbar bg="dark" variant="dark">
-        <Container>
-          <Navbar.Brand>EV Charger</Navbar.Brand>
-          <Nav>
-            <Nav.Link as={Link} to={"/Journey"}>Journey</Nav.Link>
-            <Nav.Link as={Link} to={"/Profile"}>Profile</Nav.Link>
-            <Nav.Link as={Link} to={"/Travel"}>Travel</Nav.Link>
-          </Nav>
-        </Container>
-      </Navbar>
-      </div>
-
-
-      <div>
-      <Routes>
-        <Route exact path='/Travel' element={<Travel/>}>
-        </Route>
-        <Route exact path='/Profile' element={<Profile/>}>
-        </Route>
-        <Route exact path='/Journey' element={<Journey/>}>
-        </Route>
-        </Routes>
-      </div>
-
-    </Router>
-
-
-
-  );
+    return (
+      <div style={{ 
+        background: 'gray',
+        height:'100vh',
+        marginTop:'0px',
+        fontSize:'50px',
+        backgroundSize: 'cover',
+      }}>
+      <NavbarHeader/>
+     </div>
+      );
 }
 
 export default App;

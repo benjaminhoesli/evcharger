@@ -1,5 +1,5 @@
 
-
+import Journey from 'journey'
 import React from 'react'
 
 export default function Travel() {

@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker,Polyline,Tooltip,useMap } from 'react-leaflet'
 import axios from "axios";

@@ -32,9 +32,6 @@ export default function SignIn() {
         </Stack>
     <h2> Never Run Out oF Charge!</h2>
     </div>
-
-
-    
     );
 }
 

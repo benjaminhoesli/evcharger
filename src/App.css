@@ -73,3 +73,11 @@
     transform: rotate(360deg);
   }
 }
+.leaflet-container{
+  width: 100vw;
+  height: 99vh;
+}
+body {
+  height: 100%;
+  overflow-y: hidden;
+}

@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker,Polyline,Tooltip,useMap } from 'react-l
 import axios from "axios";
 import L from "leaflet";
 import Control from 'react-leaflet-custom-control';
-import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';
+import { DefaultButton } from '@fluentui/react/lib/Button';
 
 //var map = useMap()
 

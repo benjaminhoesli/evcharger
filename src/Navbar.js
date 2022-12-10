@@ -10,10 +10,12 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 
 import {Navbar, Nav, Container} from 'react-bootstrap';
-
+import firebase from './firebase'
+firebase.firestore();
 
 
 function NavbarHeader() {
+  
   return (
     <Router>
       <div>

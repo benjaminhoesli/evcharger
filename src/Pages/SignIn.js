@@ -8,7 +8,8 @@ import { Stack} from '@fluentui/react/lib/Stack';
 import {PrimaryButton } from '@fluentui/react/lib/Button';
 import { collection, addDoc, getDoc } from "firebase/firestore";
 import {db} from '../firebase';
-
+import { useRecoilState } from 'recoil';
+import { infoState } from '../Atoms';
 const buttonProps = {
     tokens: { childrenGap: 15 },
     styles: { root: { width: 600 } }
@@ -38,18 +39,18 @@ function SignIn({setCurrentUser}) {
         <hr></hr>
         <h1>Welcome to EV Charger</h1>
         <Stack className='login' {...columnProps }>
-        <TextField label="First Name" placeholder="First Name" id="firstname"/>
-        <TextField label="Last Name" placeholder="Last Name" id="lastname" />
-        <TextField label="State" placeholder="State" id="state" />
-        <TextField label="City" placeholder="City" id="city" />
-        <TextField label="Street" placeholder="Street" id="street" />
-        <TextField label="Apt." placeholder="Apt." id="apt" />
+        <TextField label="First Name" placeholder="First Name" id="firstname" required/>
+        <TextField label="Last Name" placeholder="Last Name" id="lastname" required/>
+        <TextField label="State" placeholder="State" id="state" required/>
+        <TextField label="City" placeholder="City" id="city" required/>
+        <TextField label="Street" placeholder="Street" id="street" required/>
+        <TextField label="Apt." placeholder="Apt." id="apt" required/>
         </Stack>
-        <br></br>
-        <Stack className='login-button-placement' {...buttonProps}>
+ 
+
       
         <PrimaryButton className='login-button' text="SIGN IN WITH GOOGLE" onClick={logIn}></PrimaryButton>
-        </Stack>
+
     <h2> Never Run Out Of Charge!</h2>
     </div>
     );

@@ -43,4 +43,5 @@ export default function Profile() {
     <DefaultButton text="Update Profile"></DefaultButton>
     </div>
     );
+    
 }

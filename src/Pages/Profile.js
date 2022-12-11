@@ -29,7 +29,7 @@ export default function Profile() {
     <hr></hr>
     <Stack horizontal tokens={stackTokens} styles={stackStyles}>
       <Stack {...columnProps }>
-        <TextField label="First Name" variant="outlined"/>
+        <TextField label="First Name" />
         <TextField label="State" />
         <TextField label="Street" />
       </Stack>

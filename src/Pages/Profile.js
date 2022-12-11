@@ -1,8 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { TextField} from '@fluentui/react/lib/TextField';
 import { Stack} from '@fluentui/react/lib/Stack';
 import { DefaultButton} from '@fluentui/react/lib/Button';
-
+import data from "../mock-data.json"
 const stackTokens = { childrenGap: 100 };
 const stackStyles = { root: { width: 650,
   color: '#FFFFFF'   
@@ -13,7 +13,11 @@ const columnProps = {
 };
 
 export default function Profile() {
+  const [ info, setInfo] = useState(data);
+  console.log(info[0].firstName);
+
     return (
+     
       <div style={{ 
         background: 'gray',
         height:'100vh',
@@ -29,20 +33,19 @@ export default function Profile() {
     <hr></hr>
     <Stack horizontal tokens={stackTokens} styles={stackStyles}>
       <Stack {...columnProps }>
-        <TextField label="First Name" variant="outlined"/>
-        <TextField label="State" />
-        <TextField label="Street" />
-        <TextField label="Car 1 " />
+        <TextField label="First Name" value={info[0].firstName}/>
+        <TextField label="State" value={info[0].state}/>
+        <TextField label="Street" value={info[0].street}/>
       </Stack>
       <Stack {...columnProps}>
-        <TextField label="Last Name" />
-        <TextField label="City" />
-        <TextField label="Apt." />
-        <TextField label="Car 2" />
+        <TextField label="Last Name" value={info[0].lastName} />
+        <TextField label="City" value={info[0].city} />
+        <TextField label="Apt." value={info[0].apt}/>
       </Stack>
       
     </Stack>
     <DefaultButton text="Update Profile"></DefaultButton>
     </div>
     );
+    
 }

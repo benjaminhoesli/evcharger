@@ -1,56 +1,58 @@
-import React from 'react'
+import React, {useState, useEffect} from 'react'
 import '../App.css';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
 import { TextField} from '@fluentui/react/lib/TextField';
 import { Stack} from '@fluentui/react/lib/Stack';
-import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';
-import SignUp from './SignUp';
-import { useNavigate } from "react-router-dom";
-
-
-
-const columnProps = {
-    tokens: { childrenGap: 15 },
-    styles: { root: { width: 340 } }
-};
+import {PrimaryButton } from '@fluentui/react/lib/Button';
+import { collection, addDoc, getDoc } from "firebase/firestore";
+import {db} from '../firebase';
+import { useRecoilState } from 'recoil';
+import { infoState } from '../Atoms';
 const buttonProps = {
     tokens: { childrenGap: 15 },
-    styles: { root: { width: 700 } }
+    styles: { root: { width: 600 } }
 };
-var stackTokens = { childrenGap: 30 };
-var stackStyles = {width: 3 };
-export default function SignIn() {
+const columnProps = {
+    tokens: { childrenGap: 0 },
+    styles: { root: { width: 340 } }
+};
 
-    const history = useNavigate();
-  
-    const switch_page = () => {
-        console.log('clicked');
-        history.push("/signup")
-    }
-    return (
+
+
+
+
+function SignIn({setCurrentUser}) {
+  function logIn() {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider).then(function(result) {
+      setCurrentUser(result.user);
+      localStorage.setItem('currentUser', JSON.stringify(result.user));
+    }).catch(function(error) {
+      console.log(error);
+    });
+  }
+  return (
     <div className='signin'>
         <br></br>
         <hr></hr>
         <h1>Welcome to EV Charger</h1>
-        <h3 className='login'>Login to your account</h3>
         <Stack className='login' {...columnProps }>
-        <TextField label="email" placeholder="email address" variant="outlined"/>
-        <TextField label="password" placeholder="Password" />
+        <TextField label="First Name" placeholder="First Name" id="firstname" required/>
+        <TextField label="Last Name" placeholder="Last Name" id="lastname" required/>
+        <TextField label="State" placeholder="State" id="state" required/>
+        <TextField label="City" placeholder="City" id="city" required/>
+        <TextField label="Street" placeholder="Street" id="street" required/>
+        <TextField label="Apt." placeholder="Apt." id="apt" required/>
         </Stack>
-        <br></br>
-        <Stack className='login-button-placement' {...buttonProps}>
-        <DefaultButton className='login-button' text="SIGN IN" onClick={switch_page}></DefaultButton>
-        <PrimaryButton className='login-button' text="SIGN IN WITH GOOGLE"></PrimaryButton>
-        </Stack>
-    <h2> Never Run Out oF Charge!</h2>
+      
+        <PrimaryButton className='login-button' text="SIGN IN WITH GOOGLE" onClick={logIn}></PrimaryButton>
+
+    <h2> Never Run Out Of Charge!</h2>
     </div>
-
-
-    
     );
 }
 
 
-//initialize hash table for username and passwords
-
-// username = prompt()
-// password = ''
+export default SignIn;

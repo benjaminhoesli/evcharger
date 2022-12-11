@@ -32,17 +32,16 @@ export default function Profile() {
         <TextField label="First Name" variant="outlined"/>
         <TextField label="State" />
         <TextField label="Street" />
-        <TextField label="Car 1 " />
       </Stack>
       <Stack {...columnProps}>
         <TextField label="Last Name" />
         <TextField label="City" />
         <TextField label="Apt." />
-        <TextField label="Car 2" />
       </Stack>
       
     </Stack>
     <DefaultButton text="Update Profile"></DefaultButton>
     </div>
     );
+    
 }

@@ -1,28 +1,31 @@
-import React from 'react';
+import React, { useState,useEffect }  from 'react';
 import { Grid,TextField } from '@material-ui/core';
 import { Button} from 'react-bootstrap';
 import MenuItem from '@mui/material/MenuItem';
 import InputAdornment from '@mui/material/InputAdornment';
+import { useNavigate } from "react-router-dom";
+import { usePlacesWidget } from "react-google-autocomplete";
+import $ from "jquery";
 
 const cars = [
     {
-      value: 'Porsche',
+      value: 'porsche:taycan:20:80:base:50kw',
       label: 'Porsche Taycan',
     },
     {
-      value: 'Tesla',
+      value: '3long',
       label: 'Tesla Model 3',
     },
     {
-      value: 'Hyundai',
+      value: 'hyundai:ioniq5:22:74:awd',
       label: 'Hyundai Ioniq 5',
     },
     {
-      value: 'Audi',
+      value: 'audi:etron:19:95',
       label: 'Audi e-tron GT',
     },
     {
-    value: 'Honda',
+    value: 'honda:e:20:36',
     label: 'Honda e',
   },
   ];
@@ -30,10 +33,133 @@ const cars = [
 
 
 export default function Journey() {
-    const [car, setCar] = React.useState('Tesla');
+    /*
+    var origin_latlong = ['38.8950368','-77.0365427'] //52.533959,13.404780
+    var destination_latlong = ['35.1335022','-89.9668758'] //51.741505,14.352413
+    var car_model = '3long'
+    var state_of_charge = '90'
+    */
+    const [origin_latlong, setOrigin] = useState(); // Origin Address Geocoded
+    const [destination_latlong, setDest] = useState(); // Destination Address Geocoded
+    const [car, setCar] = React.useState('3long'); // Set Card Model Value
+    const [state_of_charge, setCharge] = useState('100'); // State of The Car Charge
+    const [origin_label, setOriginLabel] = useState(); // Set Origin Label
+    const [dest_label, setDestLabel] = useState(); // Set DEst Label
+    var isOrigValid = false
+    var isDestValid = false
+    //const [isOrigValid, setisOrigValid] = useState(false);
+    //const [isDestValid, setIsdestValid] = useState(false);
+    
+
     const handleChange = (event) => {
         setCar(event.target.value);
-      };
+    };
+
+    const checkIfSubCanBeDisabled = () => {
+      console.log(isOrigValid)
+      console.log(isDestValid)
+      if((isOrigValid === true) && (isDestValid === true)){
+        $("#search-button").prop('disabled', false);
+        console.log('TRUE')
+      }else{
+        $("#search-button").prop('disabled', true);
+        console.log('NO')
+      }
+    };
+
+    const setChargeVal = (event) => {
+      let chargeVals = parseInt(event.target.value);
+      if (chargeVals > 100){
+        $("#charge").val("100");
+        chargeVals = 100;
+        console.log("over 100")
+      }else if(chargeVals < 1){
+        console.log("under 0")
+        $("#charge").val("1");
+        chargeVals = 1;
+      }else if(isNaN(chargeVals)){
+        $("#charge").val("1");
+        chargeVals = 1;
+        console.log("NAN")
+      }
+      setCharge(chargeVals);
+      console.log(chargeVals)
+      //.target.value
+    };
+    const setOrigRef= (place) => {
+      //setisOrigValid(true)
+      isOrigValid = true
+      setOriginLabel(place.formatted_address)
+      setOrigin([place.geometry.location.lat().toString(),place.geometry.location.lng().toString()])
+      checkIfSubCanBeDisabled()
+    };
+    const setDestRef= (place) => {
+      //setIsdestValid(true)
+      isDestValid = true
+      setDestLabel(place.formatted_address)
+      setDest([place.geometry.location.lat().toString(),place.geometry.location.lng().toString()])
+      checkIfSubCanBeDisabled()
+    };
+    const { ref: originMaterialRef } = usePlacesWidget({
+      apiKey: 'AIzaSyDUjNVtpL3kt1SBeVFn0ajw5LOuUEU-CBk',
+      onPlaceSelected: (place) => setOrigRef(place),
+      options: {
+        types: ["geocode"],
+        componentRestrictions: { country: "us" },
+      },
+    });
+    const { ref: destMaterialRef } = usePlacesWidget({
+      apiKey: 'AIzaSyDUjNVtpL3kt1SBeVFn0ajw5LOuUEU-CBk',
+      onPlaceSelected: (place) => setDestRef(place),
+      options: {
+        types: ["geocode"],
+        componentRestrictions: { country: "us" },
+      },
+    });
+
+    const setDestValid = (event) => {
+      console.log('ON CHANGE')
+      //setIsdestValid(false)
+      isDestValid = false
+      checkIfSubCanBeDisabled()
+
+    };
+
+    const setOrigValid = (event) => {
+      console.log('ON CHANGE')
+      //setisOrigValid(false)
+      isOrigValid = false
+      checkIfSubCanBeDisabled()
+    };
+
+    /* setOrigValid
+    const [origin_latlong, setOrigin] = useState(); // Origin Address Geocoded
+    const [destination_latlong, setDest] = useState(); // Destination Address Geocoded
+    const [car, setCar] = React.useState('3long'); // Set Card Model Value
+    const [state_of_charge, setCharge] = useState('100'); // State of The Car Charge
+    const [origin_label, setOriginLabel] = useState(); // Set Origin Label
+    const [dest_label, setDestLabel] = useState(); // Set DEst Label
+    */
+
+    const navigate = useNavigate();
+    const createPost = (e) => {
+        e.preventDefault();
+        navigate('/Travel',
+            {
+                state: {
+                    o_latlong: origin_latlong,
+                    d_latlong : destination_latlong,
+                    t_car: car,
+                    t_state_of_charge: state_of_charge,
+                    t_origin_label: origin_label,
+                    t_dest_label: dest_label
+                }
+            });
+          }
+    
+    useEffect( () => {
+        console.log('here');
+    });
     
     return (
         <div style={{ 
@@ -43,16 +169,17 @@ export default function Journey() {
             fontSize:'50px',
             backgroundSize: 'cover',
           }}>
-    
-    <form>
+
+        <form onSubmit={createPost}>
+
         <Grid>
             <Grid container justify="center" alignIntems="center" direction="row" spacing={1}>
-                <Grid item xs={1.5}><TextField id="origin" label="Origin" variant="filled"  margin="normal" /></Grid>
-                <Grid item xs={1.5}><TextField id="destination" label="Destination" variant="filled" margin="normal" /></Grid>
-                <Grid item xs={1.5}><TextField id="charge" label="Remaining Charge" variant="filled" margin="normal" defaultValue="100" 
+                <Grid item xs={1.5}><TextField id="origin" label="Origin" variant="filled" margin="normal" onChange={setOrigValid} inputRef={originMaterialRef} /></Grid>
+                <Grid item xs={1.5}><TextField id="destination" label="Destination" variant="filled" margin="normal" onChange={setDestValid} inputRef={destMaterialRef}/></Grid>
+                <Grid item xs={1.5}><TextField id="charge" label="Remaining Charge" variant="filled" margin="normal" onChange={setChargeVal} defaultValue="100" 
                 InputProps={{
                     endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                  }}/></Grid>
+                }}/></Grid>
                 <Grid item xs={2}><TextField
                                             id="select-car"
                                             select
@@ -67,7 +194,7 @@ export default function Journey() {
                                             </MenuItem>
                                             ))}
                                             </TextField></Grid>
-                <Grid item xs={1.5} ><Button id="search-button" color="blue" appearance="primary"> Search Route </Button></Grid>                    
+                <Grid item xs={1.5} ><Button id="search-button" color="blue" appearance="primary" type='submit' disabled> Search Route </Button></Grid>                    
             </Grid>
         </Grid>
 
@@ -78,5 +205,4 @@ export default function Journey() {
         
         );
         
-}
-
+  }

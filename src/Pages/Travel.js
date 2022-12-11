@@ -4,31 +4,17 @@ import axios from "axios";
 import L from "leaflet";
 import Control from 'react-leaflet-custom-control';
 import { DefaultButton } from '@fluentui/react/lib/Button';
-
-//var map = useMap()
-
-const position = ['38.8950368','-77.0365427']
+import { useLocation } from 'react-router-dom';
+import { TailSpin } from  'react-loader-spinner'
+//import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 
 var origin_latlong = ['38.8950368','-77.0365427'] //52.533959,13.404780
-
-
-var destination_latlong = ['36.1672559','-115.148516']//51.741505,14.352413
-destination_latlong = ['35.1335022','-89.9668758']
-//35.1335022,-89.9668758
-
-var ev_reachable = 'true'
-
-var car_model = 'hyundai:kona:19:64:other'
+var destination_latlong = ['35.1335022','-89.9668758']//51.741505,14.352413\
+var car_model = '3long'
+var state_of_charge = '90'
 
 var api_key = 'f4128c06-5e39-4852-95f9-3286712a9f3a'
 //f4128c06-5e39-4852-95f9-3286712a9f3a
-//&ev[connectorTypes]=iec62196Type2Combo
-//&ev[connectorTypes]=j1772
-var url_request = 'https://api.iternio.com/1/plan?destinations=[{"lat":'+ origin_latlong[0] +',"lon":'+ origin_latlong[1] +'},{"lat":'+ destination_latlong[0] +',"lon":'+ destination_latlong[1] +'}]&car_model='+ car_model +'&path_steps=false&path_polyline=true&ref_consumption=200&fast_chargers=ccs&&realtime_weather=false&initial_soc_perc=90&charger_soc_perc=10&charger_max_soc_perc=100.0&arrival_soc_perc=10&charge_overhead=300&speed_factor_perc=100&max_speed=150&allow_ferry=true&allow_motorway=true&allow_toll=true&allow_border=true&adjust_speed=false&outside_temp=20&wind_speed=0.0&wind_dir=head&road_condition=normal&extra_weight=0&find_alts=false&find_next_charger_alts=false&exclude_ids=0&network_preferences={}&preferred_charge_cost_multiplier=0.7&nonpreferred_charge_cost_addition=0&group_preferences={}&access_groups=[]&allowed_dbs=ocm&api_key=' + api_key
-
-var car_model = '3long'
-//car_model = 'hyundai:kona:19:64:other'
-var state_of_charge = '90'
 
 var url_request = 'https://api.iternio.com/1/plan_light?car_model=' + car_model + '&destinations=[{"lat":'+ origin_latlong[0] +',"lon":'+ origin_latlong[1] +'},{"lat":'+ destination_latlong[0] +',"lon":'+ destination_latlong[1] +'}]&initial_soc_perc=' + state_of_charge + '&api_key=' + api_key
 
@@ -67,9 +53,32 @@ function MyComponent() {
     return null
 }
 export default function Travel() {
+    const { state } = useLocation();
+    console.log(state)
 
+    /*
+    o_latlong: origin_latlong,
+    d_latlong : destination_latlong,
+    t_car: car,
+    t_state_of_charge: state_of_charge
+    */
 
+    var origin_latlong = state.o_latlong//['38.8950368','-77.0365427'] //52.533959,13.404780
+    var destination_latlong = state.d_latlong//['35.1335022','-89.9668758']//51.741505,14.352413\
+    var car_model = state.t_car//'3long'
+    var state_of_charge = state.t_state_of_charge//'90'
+    var origin_label = state.t_origin_label
+    var dest_label = state.t_dest_label
+
+    var api_key = 'f4128c06-5e39-4852-95f9-3286712a9f3a'
+    //f4128c06-5e39-4852-95f9-3286712a9f3a
+
+    var url_request = 'https://api.iternio.com/1/plan_light?car_model=' + car_model + '&destinations=[{"lat":'+ origin_latlong[0] +',"lon":'+ origin_latlong[1] +'},{"lat":'+ destination_latlong[0] +',"lon":'+ destination_latlong[1] +'}]&initial_soc_perc=' + state_of_charge + '&api_key=' + api_key
+    //url_request = "https://api.iternio.com/1/plan_light?car_model=3long&destinations=[{%22address%22:%20%22Lund,%20Sweden%22},%20{%22address%22:%20%22Hyattsville,%20Maryland%22}]&initial_soc_perc=90&api_key=f4128c06-5e39-4852-95f9-3286712a9f3a"
     const [isLoading, setLoading] = useState(true); // Loading state
+    const [routeNA, setRouteNa] = useState(false); // Route Not Available
+    const [singleChargeRoute, setsingleChargeRoute] = useState(false); // Loading state
+
     const [latlong, setlatlong] = useState(); // Polyline Data
     const [endMarker, setendMarker] = useState(); // End Marker Info
     const [response, setresponse] = useState(); // API Response
@@ -84,7 +93,14 @@ export default function Travel() {
     axios.get(url_request)
     .then((t_response) => {
         const response = t_response.data;
+        console.log(response['result']['routes'])
+        if (response['result']['routes'] === undefined){
+            console.log("UNDEF")
+            setLoading(false);
+            setRouteNa(true)
+        }
         var totals = response['result']['routes'][0]
+        console.log(totals)
         var sections = response['result']['routes'][0]['steps']
         var googleMaps_URL = 'https://www.google.com/maps/dir';
         var latlong = [];
@@ -102,34 +118,63 @@ export default function Travel() {
                 chargerMarkers += temp_str
             }
         }
-        chargerMarkers = chargerMarkers.slice(0, -1);
-        chargerMarkers += ']'
-        console.log(chargerMarkers)
-        chargerMarkers = JSON.parse(chargerMarkers);
-        var len_step = sections.length-1
+        if(sections.length === 2){
+            console.log('2 STEP HEHE')
+            var len_step = sections.length-1
+            var startLocation = {}
+            startLocation['latlon'] = [sections[0]['lat'],sections[0]['lon']]
+            startLocation['label'] = origin_label
+            console.log("-----------------------------------")
+            console.log(sections[0])
+            console.log("-----------------------------------")
 
-        var startLocation = {}
-        startLocation['latlon'] = [sections[0]['lat'],sections[0]['lon']]
-        startLocation['label'] = sections[0]['name']
+            var endLocation = {}
+            endLocation['latlon'] = [sections[len_step]['lat'],sections[len_step]['lon']]
+            endLocation['label'] = dest_label
 
-        var endLocation = {}
-        endLocation['latlon'] = [sections[len_step]['lat'],sections[len_step]['lon']]
-        endLocation['label'] = sections[len_step]['name']
+            var pathInfo = '' + endLocation['label'] + '<br /> Total Distance: ' + getMiles(totals['total_drive_distance']) + ' Miles<br /> Total Travel Time: '+ secondsToHms((totals['total_drive_duration'] + totals['total_charge_duration']))  + '<br /> Total Drive Time: ' +secondsToHms(totals['total_drive_duration']) + '<br /> Total Charge Time: ' + secondsToHms(totals['total_charge_duration'])
 
-        var pathInfo = '' + endLocation['label'] + '<br /> Total Distance: ' + getMiles(totals['total_drive_distance']) + ' Miles<br /> Total Travel Time: '+ secondsToHms((totals['total_drive_duration'] + totals['total_charge_duration']))  + '<br /> Total Drive Time: ' +secondsToHms(totals['total_drive_duration']) + '<br /> Total Charge Time: ' + secondsToHms(totals['total_charge_duration'])
+            googleMaps_URL = googleMaps_URL + '/'+ sections[len_step]['lat'] + ',' + sections[len_step]['lon']
+            console.log(googleMaps_URL)
+            
+            setpathInfo(pathInfo);
+            setlatlong(latlong);
+            setresponse(response);
+            setgoogleMaps_URL(googleMaps_URL);
+            setEndLocation(endLocation);
+            setStartLocation(startLocation);
+            setsingleChargeRoute(true);
+            setLoading(false);
+        }else{
+            chargerMarkers = chargerMarkers.slice(0, -1);
+            chargerMarkers += ']'
+            console.log(chargerMarkers)
+            chargerMarkers = JSON.parse(chargerMarkers);
+            var len_step = sections.length-1
 
-        googleMaps_URL = googleMaps_URL + '/'+ sections[len_step]['lat'] + ',' + sections[len_step]['lon']
-        console.log(googleMaps_URL)
-        
-        setpathInfo(pathInfo);
-        setlatlong(latlong);
-        setresponse(response);
-        setgoogleMaps_URL(googleMaps_URL);
-        setchargerMarkers(chargerMarkers);
-        setEndLocation(endLocation);
-        setStartLocation(startLocation);
-        setLoading(false);
-        console.log(totals);
+            var startLocation = {}
+            startLocation['latlon'] = [sections[0]['lat'],sections[0]['lon']]
+            startLocation['label'] = origin_label
+
+            var endLocation = {}
+            endLocation['latlon'] = [sections[len_step]['lat'],sections[len_step]['lon']]
+            endLocation['label'] = dest_label
+
+            var pathInfo = '' + endLocation['label'] + '<br /> Total Distance: ' + getMiles(totals['total_drive_distance']) + ' Miles<br /> Total Travel Time: '+ secondsToHms((totals['total_drive_duration'] + totals['total_charge_duration']))  + '<br /> Total Drive Time: ' +secondsToHms(totals['total_drive_duration']) + '<br /> Total Charge Time: ' + secondsToHms(totals['total_charge_duration'])
+
+            googleMaps_URL = googleMaps_URL + '/'+ sections[len_step]['lat'] + ',' + sections[len_step]['lon']
+            console.log(googleMaps_URL)
+            
+            setpathInfo(pathInfo);
+            setlatlong(latlong);
+            setresponse(response);
+            setgoogleMaps_URL(googleMaps_URL);
+            setchargerMarkers(chargerMarkers);
+            setEndLocation(endLocation);
+            setStartLocation(startLocation);
+            setLoading(false);
+            console.log(totals);
+        }
         });
     }, 3000);
     }, []);
@@ -142,7 +187,57 @@ export default function Travel() {
             alignItems: "center",
             justifyContent: "center",
             height: "100vh",
-            }}>Loading the Route Data {console.log("loading state")}</div>
+            }}>Loading the Route Data {console.log("loading state")}
+            <TailSpin
+            height="80"
+            width="80"
+            color="#000000"
+            ariaLabel="tail-spin-loading"
+            radius="1"
+            wrapperStyle={{}}
+            wrapperClass=""
+            visible={true}
+            />
+            </div>
+        );
+    }
+    if (routeNA) {
+        return (
+            <div style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100vh",
+            }}>Sorry Your Route Was not able to calculate Please Retry with either a higher charge value or different starting or ending locations {console.log("loading state")}</div>
+        );
+    }
+    if(singleChargeRoute){
+        return (
+            <div>
+                <MapContainer zoom={13} scrollWheelZoom={true}>
+                <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <Polyline pathOptions={{ color: "yellow" }} positions={latlong} />
+                <MyComponent />
+                <Marker position={startLocation['latlon']}>
+                    <Tooltip content={startLocation['label']} permanent>
+                    </Tooltip>
+                </Marker>
+    
+                <Marker position={endLocation['latlon']}  >
+                    <Tooltip content={pathInfo} permanent>
+                    </Tooltip>
+                </Marker>
+                </MapContainer>
+    
+                <Control prepend position='topright'>
+                    <DefaultButton style={{ margin: 'auto' }} onClick={ () => window.open(googleMaps_URL) } className='login-button' size="large" text="Directions On Google Maps"></DefaultButton>
+                </Control>
+                
+            </div>
         );
     }
     return (

@@ -6,6 +6,9 @@ import Control from 'react-leaflet-custom-control';
 import { DefaultButton } from '@fluentui/react/lib/Button';
 import { useLocation } from 'react-router-dom';
 import { TailSpin } from  'react-loader-spinner'
+import {app, db, fv, auth, provider} from '../firebase';
+import { getFirestore, collection, setDoc, doc,addDoc, getDoc, query, where, getDocs } from 'firebase/firestore';
+
 //import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 
 var origin_latlong = ['38.8950368','-77.0365427'] //52.533959,13.404780
@@ -52,6 +55,38 @@ function MyComponent() {
     console.log('map center:', map.getCenter())
     return null
 }
+/*
+"googleMaps_URL":googleMaps_URL,
+"latlong":
+"startLocation": 
+"pathInfo":
+"endLocation": 
+"startLocation": 
+"chargerMarkers": 
+*/
+async function writeRouteData(geoHashRoute, g_url,latlon ,startLoc,pathIn ,endLoc,chargerMarkers) {
+    ///*
+    var merged = latlon.reduce(function(prev, next) {
+        return prev.concat(next);
+    });
+
+    await setDoc(doc(db, "User Routes", geoHashRoute), {
+      g_url :g_url,
+      latlon:merged.toString(),
+      startLocation:startLoc,
+      pathInfo:pathIn,
+      endLocation:endLoc,
+      chargerMarkers:chargerMarkers
+    });
+    //*/
+    console.log("ROUTE POSTED")
+
+  }
+  async function checkIfRouteWasMade(geoHashRoute){
+    const docRef = doc(db, "User Routes", geoHashRoute);
+    const docSnap = await getDoc(docRef);
+    return docSnap
+}
 export default function Travel() {
     const { state } = useLocation();
     console.log(state)
@@ -87,97 +122,170 @@ export default function Travel() {
     const [startLocation, setStartLocation] = useState(); // startLocation Markers
     const [endLocation, setEndLocation] = useState(); // endLocation Markers
     const [pathInfo, setpathInfo] = useState(); // Route Stats
-    
+    ///*
     useEffect(() => {
-    setTimeout(() => {
-    axios.get(url_request)
-    .then((t_response) => {
-        const response = t_response.data;
-        console.log(response['result']['routes'])
-        if (response['result']['routes'] === undefined){
-            console.log("UNDEF")
-            setLoading(false);
-            setRouteNa(true)
-        }
-        var totals = response['result']['routes'][0]
-        console.log(totals)
-        var sections = response['result']['routes'][0]['steps']
-        var googleMaps_URL = 'https://www.google.com/maps/dir';
-        var latlong = [];
-        var chargerMarkers = '['
-        for (let i = 0; i < sections.length-1; i++) {
-            var decoded = sections[i]['path']
-            for (let j = 0; j < decoded.length; j++) {
-                var temp = [decoded[j][0], decoded[j][1]]
-                latlong.push(temp);
-            }
-            googleMaps_URL = googleMaps_URL + '/'+ sections[i]['lat'] + ',' + sections[i]['lon']
+        (async () => {
+            var geohash = require('ngeohash');
+            //console.log((startLocation.latlon))
+            var enocded_start = geohash.encode(origin_latlong[0],origin_latlong[1]);
+            var enocded_stop = geohash.encode(destination_latlong[0],destination_latlong[1]);
 
-            if(i !== 0){
-                var temp_str = '{"gps":{ "latitude": ' + sections[i]['lat'] + ',' + '"longitude": ' + sections[i]['lon'] + '}, "label": "' + sections[i]['name'] + '"},'
-                chargerMarkers += temp_str
-            }
-        }
-        if(sections.length === 2){
-            console.log('2 STEP HEHE')
-            var len_step = sections.length-1
-            var startLocation = {}
-            startLocation['latlon'] = [sections[0]['lat'],sections[0]['lon']]
-            startLocation['label'] = origin_label
-            console.log("-----------------------------------")
-            console.log(sections[0])
-            console.log("-----------------------------------")
+            var encoded_Full_route = enocded_start + '-' + enocded_stop + '-' + car_model + '-' + state_of_charge
 
-            var endLocation = {}
-            endLocation['latlon'] = [sections[len_step]['lat'],sections[len_step]['lon']]
-            endLocation['label'] = dest_label
+            const result = await checkIfRouteWasMade(encoded_Full_route)
+            if (result.exists()) {
+                console.log("Document data:", result.data());
+                var doc_data = result.data();
+                //console.log('DOC DATA', doc_data['latlon'])
+                const merged_v2 = doc_data['latlon'].toString().split(",");
+                const newArr = [];
+                while(merged_v2.length) newArr.push(merged_v2.splice(0,2));
+                setpathInfo(doc_data['pathInfo']);
+                setlatlong(newArr);
+                setgoogleMaps_URL(doc_data['g_url']);
+                setStartLocation(doc_data['startLocation']);
+                setEndLocation(doc_data['endLocation']);
 
-            var pathInfo = '' + endLocation['label'] + '<br /> Total Distance: ' + getMiles(totals['total_drive_distance']) + ' Miles<br /> Total Travel Time: '+ secondsToHms((totals['total_drive_duration'] + totals['total_charge_duration']))  + '<br /> Total Drive Time: ' +secondsToHms(totals['total_drive_duration']) + '<br /> Total Charge Time: ' + secondsToHms(totals['total_charge_duration'])
-
-            googleMaps_URL = googleMaps_URL + '/'+ sections[len_step]['lat'] + ',' + sections[len_step]['lon']
-            console.log(googleMaps_URL)
+                //console.log(chargerMarkers)
+                if(doc_data['chargerMarkers'] === '['){
+                    setsingleChargeRoute(true);
+                    setLoading(false);
+                }else{
+                    var chargerMarkers = JSON.parse(doc_data['chargerMarkers']);
+                    setchargerMarkers(chargerMarkers);
+                    setLoading(false);
+                }
+                
+            } else {
+                axios.get(url_request)
+                .then((t_response) => {
+                    console.log("SECOND REQUESTS ------------------------------")
+                    
+                    const response = t_response.data;
+                    console.log(response['result']['routes'])
+                    if (response['result']['routes'] === undefined){
+                        console.log("UNDEF")
+                        setLoading(false);
+                        setRouteNa(true)
+                    }
+                    var totals = response['result']['routes'][0]
+                    console.log(totals)
+                    var sections = response['result']['routes'][0]['steps']
+                    var googleMaps_URL = 'https://www.google.com/maps/dir';
+                    var latlong = [];
+                    var chargerMarkers = '['
+                    for (let i = 0; i < sections.length-1; i++) {
+                        var decoded = sections[i]['path']
+                        for (let j = 0; j < decoded.length; j++) {
+                            var temp = [decoded[j][0], decoded[j][1]]
+                            latlong.push(temp);
+                        }
+                        googleMaps_URL = googleMaps_URL + '/'+ sections[i]['lat'] + ',' + sections[i]['lon']
             
-            setpathInfo(pathInfo);
-            setlatlong(latlong);
-            setresponse(response);
-            setgoogleMaps_URL(googleMaps_URL);
-            setEndLocation(endLocation);
-            setStartLocation(startLocation);
-            setsingleChargeRoute(true);
-            setLoading(false);
-        }else{
-            chargerMarkers = chargerMarkers.slice(0, -1);
-            chargerMarkers += ']'
-            console.log(chargerMarkers)
-            chargerMarkers = JSON.parse(chargerMarkers);
-            var len_step = sections.length-1
-
-            var startLocation = {}
-            startLocation['latlon'] = [sections[0]['lat'],sections[0]['lon']]
-            startLocation['label'] = origin_label
-
-            var endLocation = {}
-            endLocation['latlon'] = [sections[len_step]['lat'],sections[len_step]['lon']]
-            endLocation['label'] = dest_label
-
-            var pathInfo = '' + endLocation['label'] + '<br /> Total Distance: ' + getMiles(totals['total_drive_distance']) + ' Miles<br /> Total Travel Time: '+ secondsToHms((totals['total_drive_duration'] + totals['total_charge_duration']))  + '<br /> Total Drive Time: ' +secondsToHms(totals['total_drive_duration']) + '<br /> Total Charge Time: ' + secondsToHms(totals['total_charge_duration'])
-
-            googleMaps_URL = googleMaps_URL + '/'+ sections[len_step]['lat'] + ',' + sections[len_step]['lon']
-            console.log(googleMaps_URL)
+                        if(i !== 0){
+                            var temp_str = '{"gps":{ "latitude": ' + sections[i]['lat'] + ',' + '"longitude": ' + sections[i]['lon'] + '}, "label": "' + sections[i]['name'] + '"},'
+                            chargerMarkers += temp_str
+                        }
+                    }
+                    if(sections.length === 2){
+                        console.log('2 STEP HEHE')
+                        var len_step = sections.length-1
+                        var startLocation = {}
+                        startLocation['latlon'] = [sections[0]['lat'],sections[0]['lon']]
+                        startLocation['latlon'] = origin_latlong
+                        startLocation['label'] = origin_label
+                        console.log("-----------------------------------")
+                        console.log(sections[0])
+                        console.log("-----------------------------------")
             
-            setpathInfo(pathInfo);
-            setlatlong(latlong);
-            setresponse(response);
-            setgoogleMaps_URL(googleMaps_URL);
-            setchargerMarkers(chargerMarkers);
-            setEndLocation(endLocation);
-            setStartLocation(startLocation);
-            setLoading(false);
-            console.log(totals);
-        }
-        });
-    }, 3000);
+                        var endLocation = {}
+                        endLocation['latlon'] = [sections[len_step]['lat'],sections[len_step]['lon']]
+                        endLocation['latlon'] =  destination_latlong
+                        endLocation['label'] = dest_label
+            
+                        var pathInfo = '' + endLocation['label'] + '<br /> Total Distance: ' + getMiles(totals['total_drive_distance']) + ' Miles<br /> Total Travel Time: '+ secondsToHms((totals['total_drive_duration'] + totals['total_charge_duration']))  + '<br /> Total Drive Time: ' +secondsToHms(totals['total_drive_duration']) + '<br /> Total Charge Time: ' + secondsToHms(totals['total_charge_duration'])
+            
+                        googleMaps_URL = googleMaps_URL + '/' + sections[len_step]['lat'] + ',' + sections[len_step]['lon']
+                        console.log(googleMaps_URL)
+                        
+                        setpathInfo(pathInfo);
+                        setlatlong(latlong);
+                        setresponse(response);
+                        setgoogleMaps_URL(googleMaps_URL);
+                        setEndLocation(endLocation);
+                        setStartLocation(startLocation);
+                        setsingleChargeRoute(true);
+                        setLoading(false);
+            
+                        /*
+                        var car_model = '3long'
+                        var state_of_charge = '90'
+                        */
+                        var geohash = require('ngeohash');
+                        //console.log((startLocation.latlon))
+                        var enocded_start = geohash.encode(origin_latlong[0],origin_latlong[1]);
+                        var enocded_stop = geohash.encode(destination_latlong[0],destination_latlong[1]);
+            
+                        var encoded_Full_route = enocded_start + '-' + enocded_stop + '-' + car_model + '-' + state_of_charge
+            
+            
+            
+                        writeRouteData(encoded_Full_route,googleMaps_URL,latlong,startLocation,pathInfo,endLocation,chargerMarkers)
+                    }else{
+                        chargerMarkers = chargerMarkers.slice(0, -1);
+                        chargerMarkers += ']'
+                        console.log(chargerMarkers)
+                        var jsonChargeMarkers = chargerMarkers
+                        chargerMarkers = JSON.parse(chargerMarkers);
+                        var len_step = sections.length-1
+            
+                        var startLocation = {}
+                        startLocation['latlon'] = [sections[0]['lat'],sections[0]['lon']]
+                        startLocation['latlon'] = origin_latlong
+                        startLocation['label'] = origin_label
+            
+                        var endLocation = {}
+                        endLocation['latlon'] = [sections[len_step]['lat'],sections[len_step]['lon']]
+                        endLocation['latlon'] =  destination_latlong
+                        endLocation['label'] = dest_label
+            
+                        var pathInfo = '' + endLocation['label'] + '<br /> Total Distance: ' + getMiles(totals['total_drive_distance']) + ' Miles<br /> Total Travel Time: '+ secondsToHms((totals['total_drive_duration'] + totals['total_charge_duration']))  + '<br /> Total Drive Time: ' +secondsToHms(totals['total_drive_duration']) + '<br /> Total Charge Time: ' + secondsToHms(totals['total_charge_duration'])
+            
+                        googleMaps_URL = googleMaps_URL + '/'+ sections[len_step]['lat'] + ',' + sections[len_step]['lon']
+                        console.log(googleMaps_URL)
+                        
+                        setpathInfo(pathInfo);
+                        setlatlong(latlong);
+                        setresponse(response);
+                        setgoogleMaps_URL(googleMaps_URL);
+                        setchargerMarkers(chargerMarkers);
+                        setEndLocation(endLocation);
+                        setStartLocation(startLocation);
+                        setLoading(false);
+                        console.log(totals);
+            
+                        var geohash = require('ngeohash');
+                        //console.log((startLocation.latlon))
+                        var enocded_start = geohash.encode(origin_latlong[0],origin_latlong[1]);
+                        var enocded_stop = geohash.encode(destination_latlong[0],destination_latlong[1]);
+            
+                        var encoded_Full_route = enocded_start + '-' + enocded_stop + '-' + car_model + '-' + state_of_charge
+            
+                        writeRouteData(encoded_Full_route,googleMaps_URL,latlong,startLocation,pathInfo,endLocation,jsonChargeMarkers)
+                    }
+                
+                    });
+            }
+        })();
+        return () => {
+            console.log('hello')
+        };
     }, []);
+    //*/
+    
+
+    //writeRouteData(geoHashRoute, routes, g_url,latlon ,startLoc,pathIn ,endLoc,chargerMarkers)
+    //writeRouteData("TEST ROUTE CALL",googleMaps_URL,latlong,startLocation,pathInfo,endLocation,chargerMarkers)
     
     if (isLoading) {
         return (
